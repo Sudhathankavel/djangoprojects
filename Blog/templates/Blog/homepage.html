@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+{% extends 'Blog/base.html' %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} ANONYMOUS BLOG {% endblock %}</title>
+</head>
+{% block pagecontent %}
+<header>
+    <h2><i>ANONYMOUS BLOG</i></h2>
+</header>
+<body>
+
+<form action="{% url 'Blog:homepage' %}" method="post" id="home_page">
+{% csrf_token %}
+    <table>
+
+        <tr>
+            <td><label>Title:</label></td>
+        </tr>
+        <tr>
+            <td>{{form.title}}{% if form.title.errors %}
+                {{form.title.errors |striptags }}{% endif %}</td>
+        </tr>
+        <tr>
+            <td><label>content:</label></td>
+        </tr>
+        <tr>
+            <td>
+                {{form.content}}{% if form.content.errors%}
+                {{form.content.errors|striptags}}{%endif%}
+            </td>
+        </tr>
+        {% if form.non_field_errors %}
+        {{form.non_field_errors | striptags}}
+        {% endif %}
+        <tr>
+            <td><button>Save and done</button></td>
+            <td></td>
+        </tr>
+    </table>
+
+</form>
+
+</body>
+{%endblock%}
+</html>

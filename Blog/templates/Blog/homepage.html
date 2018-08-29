@@ -1,0 +1,29 @@
+{% extends 'Blog/base.html' %}
+{% block title %} ANONYMOUS BLOG {% endblock %}
+{% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
+{% block pagecontent %}
+    <form action="{% url 'Blog:homepage' %}" method="post" id="home_page">
+        {% csrf_token %}
+        {{form.non_field_errors}}
+        <div id="Wrapper" style="padding-top : 25px;">
+                <div id="first">
+                    {{form.title.errors}}
+                    <label for="{{form.title.id_for_label}}">Title:</label>
+                    <p>
+                        {{form.title}}
+                    </p>
+                </div>
+                <div id="second">
+                    {{form.content.errors}}
+                    <label for="{{form.content.id_for_label}}">content:</label>
+                    <p>
+                        {{form.content}}
+                    </p>
+                </div>
+                <div id="third">
+                    <button>Save and done</button>
+                </div>
+        </div>
+    </form>
+{%endblock%}
+</html>

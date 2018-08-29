@@ -1,47 +1,29 @@
-<!DOCTYPE html>
 {% extends 'Blog/base.html' %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %} ANONYMOUS BLOG {% endblock %}</title>
-</head>
+{% block title %} ANONYMOUS BLOG {% endblock %}
+{% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
 {% block pagecontent %}
-<header>
-    <h2><i>ANONYMOUS BLOG</i></h2>
-</header>
-<body>
-
-<form action="{% url 'Blog:homepage' %}" method="post" id="home_page">
-{% csrf_token %}
-    <table>
-
-        <tr>
-            <td><label>Title:</label></td>
-        </tr>
-        <tr>
-            <td>{{form.title}}{% if form.title.errors %}
-                {{form.title.errors |striptags }}{% endif %}</td>
-        </tr>
-        <tr>
-            <td><label>content:</label></td>
-        </tr>
-        <tr>
-            <td>
-                {{form.content}}{% if form.content.errors%}
-                {{form.content.errors|striptags}}{%endif%}
-            </td>
-        </tr>
-        {% if form.non_field_errors %}
-        {{form.non_field_errors | striptags}}
-        {% endif %}
-        <tr>
-            <td><button>Save and done</button></td>
-            <td></td>
-        </tr>
-    </table>
-
-</form>
-
-</body>
+    <form action="{% url 'Blog:homepage' %}" method="post" id="home_page">
+        {% csrf_token %}
+        <div id="Wrapper" style="padding-top : 25px;">
+                <div id="first">
+                    <label>Title:</label>
+                    <p>{{form.title}}{% if form.title.errors %}
+                        {{form.title.errors |striptags }}{% endif %}</p>
+                </div>
+                <div id="second">
+                    <label>content:</label>
+                    <p>{{form.content}}{% if form.content.errors %}
+                        {{form.content.errors |striptags }}{% endif %}</p>
+                </div>
+                <div id="third">
+                    <button>Save and done</button>
+                </div>
+                {% if form.non_field_errors %}
+                <div id="non_field_errors">
+                    {{form.non_field_errors}}
+                </div>
+                {% endif %}
+        </div>
+    </form>
 {%endblock%}
 </html>

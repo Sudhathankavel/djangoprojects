@@ -1,5 +1,4 @@
-from django.urls import path, include
-from django.conf.urls import url
+from django.urls import path
 from Blog.views import HomePage, ContentPage
 
 app_name = 'Blog'

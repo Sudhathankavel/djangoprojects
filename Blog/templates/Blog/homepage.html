@@ -7,21 +7,29 @@
         <div id="Wrapper" style="padding-top : 25px;">
                 <div id="first">
                     <label>Title:</label>
-                    <p>{{form.title}}{% if form.title.errors %}
-                        {{form.title.errors |striptags }}{% endif %}</p>
+                    <p>
+                        {{form.title}}
+                        {% if form.title.errors %}
+                            {{form.title.errors}}
+                        {% endif %}
+                    </p>
                 </div>
                 <div id="second">
                     <label>content:</label>
-                    <p>{{form.content}}{% if form.content.errors %}
-                        {{form.content.errors |striptags }}{% endif %}</p>
+                    <p>
+                        {{form.content}}
+                        {% if form.content.errors %}
+                            {{form.content.errors}}
+                        {% endif %}
+                    </p>
                 </div>
                 <div id="third">
                     <button>Save and done</button>
                 </div>
                 {% if form.non_field_errors %}
-                <div id="non_field_errors">
-                    {{form.non_field_errors}}
-                </div>
+                    <div id="non_field_errors">
+                        {{form.non_field_errors}}
+                    </div>
                 {% endif %}
         </div>
     </form>

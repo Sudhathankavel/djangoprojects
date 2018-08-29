@@ -5,6 +5,7 @@ from .models import Blog
 import uuid
 
 
+
 class HomePage(View):
     def get(self, request):
         form = BlogForm()

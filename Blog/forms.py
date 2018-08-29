@@ -16,4 +16,3 @@ class BlogForm(forms.ModelForm):
         content = cleaned_data.get("content")
         if len(content) < len(title):
             raise forms.ValidationError("content should be longer than title.")
-        return cleaned_data

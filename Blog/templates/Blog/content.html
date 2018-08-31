@@ -1,12 +1,11 @@
 {% extends 'Blog/base.html' %}
 {% block title %} Actual content {% endblock %}
-{% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
 {% block pagecontent %}
-    <a href="{% url 'Blog:homepage' %}">Back To HomePage</a><br/><br/>
     <h4>Title:</h4>
-        {{blog.title}}
+    {{blog.title}}
     <h4>Content:</h4>
-        {{blog.content}}
+    {{blog.content}} <br/><br/>
+    <a href="{% url 'Blog:homepage' %}">Back To HomePage</a><br/><br/>
     {%if messages %}
         <div class="messages">
             {% for message in messages %}
@@ -15,5 +14,6 @@
                 </div>
             {% endfor %}
         </div>
+<a href=""></a>
     {% endif %}
 {% endblock %}

@@ -1,9 +1,18 @@
 {% extends 'Blog/base.html' %}
 {% block title %} Actual content {% endblock %}
 {% block pagecontent %}
+    <a href="{% url 'Blog:homepage' %}">Back To HomePage</a><br/><br/>
+    {%if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="" role="alert">
+                    {{message}}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <h4>Title:</h4>
     {{blog.title}}
     <h4>Content:</h4>
     {{blog.content}} <br/><br/>
-    <a href="{% url 'Blog:homepage' %}">Back To HomePage</a>
 {% endblock %}

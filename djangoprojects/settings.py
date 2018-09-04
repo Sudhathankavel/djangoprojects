@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -119,3 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATIC_ROOT = (os.path.join(BASE_DIR, 'static'))
+# STATIC_ROOT = "/var/www/example.com/static/"
+STATICFILES_DIR = (os.path.join(BASE_DIR, 'static'))

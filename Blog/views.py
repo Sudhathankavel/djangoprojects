@@ -34,7 +34,7 @@ class ContentPage(View):
 
 
 class EditPage(View):
-    ctx = {'action': reverse_lazy('Blog:homepage'), 'id': 'edit_post', 'button': 'Edit and Save'}
+    ctx = {'id': 'edit_post', 'button': 'Edit and Save'}
 
     def get(self, request, id, secret_key):
         blog = get_object_or_404(Blog, id=id, secret_key=secret_key)
@@ -47,6 +47,6 @@ class EditPage(View):
         if form.is_valid():
             instance = form.save()
             instance.save()
-            messages.info(request, "Your post has been successfully Updated!!!")
+            messages.success(request, "Your post has been successfully Updated!!!")
             return redirect("Blog:Content", id=instance.id)
         return render(request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})

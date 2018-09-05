@@ -1,28 +1,45 @@
 {% extends 'Blog/base.html' %}
+{% load widget_tweaks %}
 {% block title %} ANONYMOUS BLOG {% endblock %}
 {% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
 {% block pagecontent %}
+<div id="Wrapper" class="container" style="padding-top : 25px;">
     <form action="{{ctx.action}}" method="post" id="{{ctx.id}}">
         {% csrf_token %}
-        {{form.non_field_errors}}
-        <div id="Wrapper" style="padding-top : 25px;">
-                <div id="first">
-                    {{form.title.errors}}
-                    <label for="{{form.title.id_for_label}}">Title:</label>
-                    <p>
-                        {{form.title}}
-                    </p>
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors%}
+                    {{error}}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group" id="first">
+            <label for="{{form.title.id_for_label}}">Title:</label>
+            {% if form.title.errors %}
+                {% render_field form.title class="form-control is-invalid" %}
+                <div class="invalid-feedback">
+                     {{form.title.errors}}
                 </div>
-                <div id="second">
+            {% else %}
+                {% render_field form.title class="form-control is-valid" %}
+            {% endif %}
+        </div>
+
+        <div class="form-group " id="second">
+            <label for="{{form.content.id_for_label}}">content:</label>
+            {% if form.content.errors %}
+                {% render_field form.content class="form-control is-invalid" %}
+                <div class="invalid-feedback">
                     {{form.content.errors}}
-                    <label for="{{form.content.id_for_label}}">content:</label>
-                    <p>
-                        {{form.content}}
-                    </p>
                 </div>
-                <div id="third">
-                    <button>{{ctx.button}}</button>
-                </div>
+            {% else %}
+                {% render_field form.content class="form-control is-valid" %}
+            {% endif %}
+        </div>
+        <div id="third">
+            <button class="btn btn-primary">{{ctx.button}}</button>
         </div>
     </form>
+</div>
 {%endblock%}

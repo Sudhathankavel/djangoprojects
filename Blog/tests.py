@@ -8,14 +8,14 @@ class FormFieldTest(TestCase):
     def setUp(self):
         self.post = Blog.objects.create(title='testBlogPost', content='test content')
 
-    def test_fields_for_ten_character(self):
+    def test_FieldsForTenCharacter(self):
         form_data = {'title': 'test', 'content': 'content'}
         form = BlogForm(data=form_data)
         self.assertEqual(len(form.errors), 2)
         self.assertEquals(form.errors['title'], ['Ensure this value has at least 10 characters (it has 4).'])
         self.assertEquals(form.errors['content'], ['Ensure this value has at least 10 characters (it has 7).'])
 
-    def test_to_check_content_greater_than_title(self):
+    def test_ToCheckContentGreaterThanTitle(self):
         data = {'title': 'testTitle With ten Characters', 'content': 'test content with TC'}
         form = BlogForm(data=data)
         # import pdb;pdb.set_trace()
@@ -24,11 +24,34 @@ class FormFieldTest(TestCase):
 
 
 class FormBlogTest(TestCase):
-    def test_blog_form(self):
+    def setUp(self):
+        self.form_data = {'title': 'test Title With ten Characters', 'content': 'test content with Ten Characters long'}
+
+    def test_BlogForm(self):
         client = Client(enforce_csrf_checks=True)
-        response = self.client.post(reverse('Blog:homepage'), {'title': 'test Title With ten Characters', 'content': 'test content with TC'})
+        response = self.client.post(reverse('Blog:homepage'), {'title': 'test Title With ten Characters long', 'content': 'test content with TC'})
         error_data = 'content should be longer than title.'
         self.assertContains(response, error_data, status_code=200)
+
+    def test_VerifyRedirect(self):
+        response = self.client.post(reverse('Blog:homepage'), self.form_data)
+        instance = Blog.objects.get(title='test Title With ten Characters')
+        self.assertRedirects(response, reverse('Blog:Content', kwargs={'id': instance.id}), status_code=302, target_status_code=200)
+
+    def test_RedirectedPageIsInHtml(self):
+        response = self.client.post(reverse('Blog:homepage'), self.form_data, follow=True)
+        self.assertContains(response, 'test Title With ten Characters', status_code=200)
+        self.assertContains(response, 'test content with Ten Characters long', status_code=200)
+
+    def test_VerifyEditLink(self):
+        response = self.client.post(reverse('Blog:homepage'), self.form_data, follow=True)
+        instance = Blog.objects.get(title='test Title With ten Characters')
+        data = '/Blog/{id}/edit/{secret_key}'.format(id=instance.id, secret_key=instance.secret_key)
+        self.assertContains(response, data, status_code=200)
+        self.assertContains(response, 'test Title With ten Characters', status_code=200)
+        self.assertContains(response, 'test content with Ten Characters long', status_code=200)
+        content_response = self.client.get(reverse('Blog:Content', kwargs={'id': instance.id}))
+        self.assertNotContains(content_response, data, status_code=200)
 
 
 

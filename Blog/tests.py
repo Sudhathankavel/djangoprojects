@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from .models import Blog
 from .forms import BlogForm
 from django.shortcuts import reverse
+import uuid
 
 
 class FormFieldTest(TestCase):
@@ -50,6 +51,27 @@ class FormBlogTest(TestCase):
         self.assertContains(response, data, status_code=200)
         content_response = self.client.get(reverse('Blog:Content', kwargs={'id': instance.id}))
         self.assertNotContains(content_response, data, status_code=200)
+
+
+class EditLinkTest(TestCase):
+    def setUp(self):
+        self.blogpost = Blog.objects.create(title='test blog post with ORM', content='test content by a post with ORM')
+        self.blogpost.secret_key = uuid.uuid4().hex[:6].upper()
+        self.blogpost.save()
+        self.instance = Blog.objects.get(title='test blog post with ORM')
+
+    def test_verify_redirection_of_edit_link(self):
+        response = self.client.get(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}))
+        self.assertContains(response, 'test blog post with ORM', status_code=200)
+        wrong_secret_key = 'DF20192'
+        response = self.client.get(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': wrong_secret_key}))
+        self.assertNotContains(response, 'test blog post with ORM', status_code=404)
+
+    def test_changes_edits_the_post_successfully(self):
+        update_data = {'title': 'test title to check the updation', 'content': 'test content to check the updation is working'}
+        response = self.client.post(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}), update_data, follow=True)
+        self.assertContains(response, 'Your post has been successfully Updated!!!', status_code=200)
+
 
 
 

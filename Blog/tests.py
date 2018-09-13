@@ -70,8 +70,8 @@ class EditLinkTest(TestCase):
     def test_changes_edits_the_post_successfully(self):
         update_data = {'title': 'test title to check the updation', 'content': 'test content to check the updation is working'}
         response = self.client.post(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}), update_data, follow=True)
-        updated_data = Blog.objects.get(title='test title to check the updation')
-        self.assertEquals(update_data['content'], 'test content to check the updation is working' )
+        fetch_updated_data = Blog.objects.get(title='test title to check the updation')
+        self.assertEquals(fetch_updated_data.content, 'test content to check the updation is working' )
 
 
 

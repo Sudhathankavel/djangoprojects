@@ -65,7 +65,7 @@ class EditLinkTest(TestCase):
         self.assertContains(response, 'test blog post with ORM', status_code=200)
         wrong_secret_key = 'DF20192'
         response = self.client.get(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': wrong_secret_key}))
-        self.assertNotContains(response, 'test blog post with ORM', status_code=404)
+        self.assertEquals(response.status_code, 404)
 
     def test_changes_edits_the_post_successfully(self):
         update_data = {'title': 'test title to check the updation', 'content': 'test content to check the updation is working'}

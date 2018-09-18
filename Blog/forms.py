@@ -1,5 +1,6 @@
 from .models import Blog
 from django import forms
+import bleach
 
 
 class BlogForm(forms.ModelForm):
@@ -17,3 +18,9 @@ class BlogForm(forms.ModelForm):
         content = cleaned_data.get("content")
         if len(content) < len(title):
             raise forms.ValidationError("content should be longer than title.")
+
+    def clean_content(self):
+        content = self.cleaned_data['content']
+        sanitized_content = bleach.clean(content, tags=['b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+        return sanitized_content
+

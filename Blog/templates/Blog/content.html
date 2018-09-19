@@ -13,7 +13,7 @@
                 {%if messages %}
                     <div class="messages">
                         {% for message in messages %}
-                            <div class="alert alert-success" role="alert">
+                            <div class="alert alert-success"  role="alert">
                                 {{message|safe}}
                             </div>
                         {% endfor %}
@@ -32,7 +32,7 @@
         <div class="form-group row">
             <label for="blog_content">Content:</label>
             <div class="col-sm-10">
-                {{blog.content}}
+                {{blog.content|linebreaks}}
             </div>
         </div>
     </div>

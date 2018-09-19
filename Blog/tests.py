@@ -3,6 +3,7 @@ from .models import Blog
 from .forms import BlogForm
 from django.shortcuts import reverse
 import uuid
+from django.utils.safestring import mark_safe
 
 
 class FormFieldTest(TestCase):
@@ -72,6 +73,12 @@ class EditLinkTest(TestCase):
         response = self.client.post(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}), update_data, follow=True)
         fetch_updated_data = Blog.objects.get(title='test title to check the updation')
         self.assertEquals(fetch_updated_data.content, 'test content to check the updation is working' )
+
+    def test_rendering_newLine_as_brk(self):
+        response = self.client.post(reverse('Blog:homepage'), {'title': 'ANONYMOUS BLOG POST RENDERING NEW LINES AS BREAK', 'content': 'hai I am using Django for development,\n when I render it to a template should  show the newline character'}, follow=True)
+        self.assertContains(response, 'I am using Django for development,<br /> when I render it to a template should  show the newline character', status_code=200)
+
+
 
 
 

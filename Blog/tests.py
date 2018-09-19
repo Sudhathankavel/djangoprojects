@@ -76,7 +76,7 @@ class EditLinkTest(TestCase):
 
     def test_rendering_newLine_as_brk(self):
         response = self.client.post(reverse('Blog:homepage'), {'title': 'ANONYMOUS BLOG POST RENDERING NEW LINES AS BREAK', 'content': 'hai I am using Django for development,\n when I render it to a template should  show the newline character'}, follow=True)
-        self.assertContains(response, '<br />', status_code=200)
+        self.assertContains(response, 'I am using Django for development,<br /> when I render it to a template should  show the newline character', status_code=200)
 
 
 

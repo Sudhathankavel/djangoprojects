@@ -6,6 +6,7 @@ from django.urls import reverse, reverse_lazy
 import uuid
 from django.contrib import messages
 from django.utils.safestring import mark_safe
+from bs4 import BeautifulSoup,Tag
 
 
 class HomePage(View):
@@ -30,7 +31,15 @@ class HomePage(View):
 class ContentPage(View):
     def get(self, request, id):
         blog = get_object_or_404(Blog, id=id)
-        return render(request, "Blog/content.html", {'blog': blog})
+        soup = BeautifulSoup(blog.content)
+        list_of_contents = " "
+        soup.body.hidden = True
+        soup.html.hidden = True
+        for tag in soup.body.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+            tag_text = tag.string
+            index = int(tag.name[1])
+            list_of_contents += "<ul>"*index + "<li>" + tag_text + "\n </li>"+"</ul>" * index
+        return render(request, "Blog/content.html", {'blog': blog, 'blog_toc': list_of_contents})
 
 
 class EditPage(View):

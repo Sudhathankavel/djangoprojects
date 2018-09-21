@@ -38,8 +38,7 @@ class ContentPage(View):
         for tag in soup.body.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
             tag_text = tag.string
             index = int(tag.name[1])
-            tag.string.replace_with("<ul>"*index + "<li>" + tag_text + "\n </li>"+"</ul>" * index)
-            list_of_contents += tag.string
+            list_of_contents += "<ul>"*index + "<li>" + tag_text + "\n </li>"+"</ul>" * index
         return render(request, "Blog/content.html", {'blog': blog, 'blog_toc': list_of_contents})
 
 

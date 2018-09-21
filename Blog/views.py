@@ -6,7 +6,7 @@ from django.urls import reverse, reverse_lazy
 import uuid
 from django.contrib import messages
 from django.utils.safestring import mark_safe
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup,Tag
 
 
 class HomePage(View):
@@ -25,7 +25,6 @@ class HomePage(View):
             url_path = reverse('Blog:homepage', kwargs={'id': instance.id, 'secret_key': instance.secret_key})
             messages.success(request, mark_safe("<a href='{url_path}'>{url_path}k</a>".format(url_path=url_path)))
             return redirect("Blog:Content", id=instance.id)
-        print(form.non_field_errors())
         return render(request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
 
 
@@ -33,15 +32,15 @@ class ContentPage(View):
     def get(self, request, id):
         blog = get_object_or_404(Blog, id=id)
         soup = BeautifulSoup(blog.content)
-        valid_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        list_of_contents = " "
         soup.body.hidden = True
         soup.html.hidden = True
-        for text in soup.body.find_all(string=True):
-            if text.parent.name not in valid_tags:
-                text.replace_with('')
-            else:
-                text.parent.replaceWith((valid_tags.index(text.parent.name)+1) * '*' + text)
-        return render(request, "Blog/content.html", {'blog': blog, 'blog_toc': soup.prettify()})
+        for tag in soup.body.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+            tag_text = tag.string
+            index = int(tag.name[1])
+            tag.string.replace_with("<ul>"*index + "<li>" + tag_text + "\n </li>"+"</ul>" * index)
+            list_of_contents += tag.string
+        return render(request, "Blog/content.html", {'blog': blog, 'blog_toc': list_of_contents})
 
 
 class EditPage(View):

@@ -31,14 +31,14 @@ class HomePage(View):
 class ContentPage(View):
     def get(self, request, id):
         blog = get_object_or_404(Blog, id=id)
-        soup = BeautifulSoup(blog.content)
+        soup = BeautifulSoup(blog.content, "lxml")
         list_of_contents = " "
         soup.body.hidden = True
         soup.html.hidden = True
         for tag in soup.body.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
             tag_text = tag.string
             index = int(tag.name[1])
-            list_of_contents += "<ul>"*index + "<li>" + tag_text + "\n </li>"+"</ul>" * index
+            list_of_contents += "<ul>"*index + "<li>" + tag_text + "</li>"+"</ul>" * index
         return render(request, "Blog/content.html", {'blog': blog, 'blog_toc': list_of_contents})
 
 

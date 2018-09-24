@@ -82,12 +82,13 @@ class RenderingTest(TestCase):
     def test_to_check_rendering_of_unsafe_tags(self):
         content_to_render = {'title': 'ANONYMOUS BLOG POST RENDERING', 'content': '<h1>This is h1 tag</h1><script>this is nonsafe tag</script>\n\n<h3>And this is h3 tag</h3>'}
         response = self.client.post(reverse('Blog:homepage'), content_to_render, follow=True)
+        self.assertContains(response, '<h1>This is h1 tag</h1>', status_code=200)
         self.assertContains(response, '&lt;script&gt;this is nonsafe tag&lt;/script&gt;', status_code=200)
 
     def test_to_check_outline(self):
         content = {'title': 'ANONYMOUS BLOG POST - OULTINE CHECK', 'content': '<h1>This is h1 tag</h1><h2>This is h2 tag</h2>'}
         response = self.client.post(reverse('Blog:homepage'), content, follow=True)
-        self.assertContains(response, '<ul><li>This is h1 tag<br /> </li></ul><ul><ul><li>This is h2 tag<br /> </li></ul></ul>', status_code=200)
+        self.assertContains(response, '<ul><li>This is h1 tag</li></ul><ul><ul><li>This is h2 tag</li></ul></ul></p>', status_code=200)
 
 
 

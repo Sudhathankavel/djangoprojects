@@ -3,7 +3,6 @@ from .models import Blog
 from .forms import BlogForm
 from django.shortcuts import reverse
 import uuid
-from django.utils.safestring import mark_safe
 
 
 class FormFieldTest(TestCase):
@@ -77,6 +76,20 @@ class EditLinkTest(TestCase):
     def test_rendering_newLine_as_brk(self):
         response = self.client.post(reverse('Blog:homepage'), {'title': 'ANONYMOUS BLOG POST RENDERING NEW LINES AS BREAK', 'content': 'hai I am using Django for development,\n when I render it to a template should  show the newline character'}, follow=True)
         self.assertContains(response, 'I am using Django for development,<br /> when I render it to a template should  show the newline character', status_code=200)
+
+
+class RenderingTest(TestCase):
+    def test_to_check_rendering_of_unsafe_tags(self):
+        content_to_render = {'title': 'ANONYMOUS BLOG POST RENDERING', 'content': '<h1>This is h1 tag</h1><script>this is nonsafe tag</script>\n\n<h3>And this is h3 tag</h3>'}
+        response = self.client.post(reverse('Blog:homepage'), content_to_render, follow=True)
+        self.assertContains(response, '<h1>This is h1 tag</h1>', status_code=200)
+        self.assertContains(response, '&lt;script&gt;this is nonsafe tag&lt;/script&gt;', status_code=200)
+
+    def test_to_check_outline(self):
+        content = {'title': 'ANONYMOUS BLOG POST - OULTINE CHECK', 'content': '<h1>This is h1 tag</h1><h2>This is h2 tag</h2>'}
+        response = self.client.post(reverse('Blog:homepage'), content, follow=True)
+        self.assertContains(response, '<ul><li>This is h1 tag</li></ul><ul><ul><li>This is h2 tag</li></ul></ul></p>', status_code=200)
+
 
 
 

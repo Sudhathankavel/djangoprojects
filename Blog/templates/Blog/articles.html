@@ -1,12 +1,12 @@
 {% extends 'Blog/base.html' %}
 {% load widget_tweaks %}
-{% block title %} ANONYMOUS BLOG {% endblock %}
+{% block title %} ARTICLES {% endblock %}
 {% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
 {% block pagecontent %}
 <div class="container">
     <div class="card">
       <div class="card-body">
-        <h4 class="card-title"><a>Hai {{request.user.username}} !!!!!!</a></h4>
+        <h4 class="card-title">Hai {{request.user.username}} !!!!!!</h4>
           <h6 class="font-weight-bold indigo-text py-2">Your Articles list:</h6>
         <p class="card-text">
             {%for post in articles %}

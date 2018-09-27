@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import CreateView,TemplateView, UpdateView
+from django.views.generic import CreateView,TemplateView
 from .forms import BlogForm, LoginForm, SignUpFrom
 from .models import Blog
 from django.urls import reverse, reverse_lazy
@@ -64,9 +64,7 @@ class EditPage(View):
         if self.kwargs.get('secret_key'):
             self.blog = get_object_or_404(Blog, id=self.kwargs.get('id'), secret_key=self.kwargs.get('secret_key'))
         else:
-            self.blog = get_object_or_404(Blog, id=self.kwargs.get('id'))
-            if not self.blog.author == request.user:
-                raise Http404()
+            self.blog = get_object_or_404(Blog, id=self.kwargs.get('id'), author=request.user)
         return super(EditPage, self).dispatch(request, *args, **kwargs)
 
     def get(self, *args, **kwargs):

@@ -42,6 +42,7 @@ class HomePage(View):
 
 
 class ContentPage(View):
+
     def get(self, request, id):
         blog = get_object_or_404(Blog, id=id)
         soup = BeautifulSoup(blog.content, "lxml")
@@ -106,6 +107,7 @@ class LoginView(View):
 
 
 class LogoutView(View):
+
     def post(self, request):
         logout(request)
         return redirect("Blog:homepage")

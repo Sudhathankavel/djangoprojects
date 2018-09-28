@@ -31,8 +31,6 @@ class HomePage(View):
             instance = form.save()
             if request.user.is_authenticated:
                 instance.author = request.user
-                url_path = reverse('Blog:LogUserEdit', kwargs={'id': instance.id})
-                request.session['url_path'] = url_path
                 instance.save()
             else:
                 instance.secret_key = uuid.uuid4().hex[:6].upper()
@@ -58,7 +56,7 @@ class ContentPage(View):
 
 
 class EditPage(View):
-    ctx = {'id': 'edit_post', 'button': 'Edit and Save'}
+    ctx = {'id': 'edit_post', 'button': 'Edit and Save', 'claim_button':'Claim'}
 
     def dispatch(self, request, *args, **kwargs):
         if self.kwargs.get('secret_key'):

@@ -1,0 +1,22 @@
+{% extends 'Blog/base.html' %}
+{% load widget_tweaks %}
+{% block title %} ARTICLES {% endblock %}
+{% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
+{% block pagecontent %}
+<div class="container">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Hai {{request.user.username}} !!!!!!</h4>
+          <h6 class="font-weight-bold indigo-text py-2">Your Articles list:</h6>
+        <p class="card-text">
+            {%for post in articles %}
+                {{post|linebreaks}}
+                {% if request.user == post.author%}
+                    <a href="{% url 'Blog:LogUserEdit' id=post.id %}">Edit</a>
+                {% endif %}
+            {% endfor %}
+        </p>
+      </div>
+    </div>
+</div>
+{%endblock%}

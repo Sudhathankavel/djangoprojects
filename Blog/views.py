@@ -1,12 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from .forms import BlogForm
+from django.views.generic import CreateView,TemplateView
+from .forms import BlogForm, LoginForm, SignUpFrom
 from .models import Blog
 from django.urls import reverse, reverse_lazy
 import uuid
 from django.contrib import messages
 from django.utils.safestring import mark_safe
-from bs4 import BeautifulSoup,Tag
+from bs4 import BeautifulSoup
+from django.contrib.auth import login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+class MyLoginRequiredMixin(LoginRequiredMixin):
+    login_url = reverse_lazy('Blog:login')
+    redirect_field_name = 'next'
 
 
 class HomePage(View):
@@ -20,15 +29,20 @@ class HomePage(View):
         form = BlogForm(request.POST)
         if form.is_valid():
             instance = form.save()
-            instance.secret_key = uuid.uuid4().hex[:6].upper()
-            instance.save()
-            url_path = reverse('Blog:homepage', kwargs={'id': instance.id, 'secret_key': instance.secret_key})
-            messages.success(request, mark_safe("<a href='{url_path}'>{url_path}k</a>".format(url_path=url_path)))
+            if request.user.is_authenticated:
+                instance.author = request.user
+                instance.save()
+            else:
+                instance.secret_key = uuid.uuid4().hex[:6].upper()
+                instance.save()
+                url_path = reverse('Blog:editPage', kwargs={'id': instance.id, 'secret_key': instance.secret_key})
+                messages.success(request, mark_safe("<a href='{url_path}'>{url_path}</a>".format(url_path=url_path)))
             return redirect("Blog:Content", id=instance.id)
         return render(request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
 
 
 class ContentPage(View):
+
     def get(self, request, id):
         blog = get_object_or_404(Blog, id=id)
         soup = BeautifulSoup(blog.content, "lxml")
@@ -43,19 +57,66 @@ class ContentPage(View):
 
 
 class EditPage(View):
-    ctx = {'id': 'edit_post', 'button': 'Edit and Save'}
+    ctx = {'id': 'edit_post', 'button': 'Edit and Save', 'claim_button':'Claim'}
 
-    def get(self, request, id, secret_key):
-        blog = get_object_or_404(Blog, id=id, secret_key=secret_key)
-        form = BlogForm(instance=blog)
-        return render(request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
+    def dispatch(self, request, *args, **kwargs):
+        if self.kwargs.get('secret_key'):
+            self.blog = get_object_or_404(Blog, id=self.kwargs.get('id'), secret_key=self.kwargs.get('secret_key'))
+        else:
+            self.blog = get_object_or_404(Blog, id=self.kwargs.get('id'), author=request.user)
+        return super(EditPage, self).dispatch(request, *args, **kwargs)
 
-    def post(self, request, id, secret_key):
-        blog = get_object_or_404(Blog, id=id, secret_key=secret_key)
-        form = BlogForm(request.POST or None, instance=blog)
+    def get(self, request, *args, **kwargs):
+        form = BlogForm(instance=self.blog)
+        return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
+
+    def post(self, request, *args, **kwargs):
+        form = BlogForm(self.request.POST or None, instance=self.blog)
         if form.is_valid():
             instance = form.save()
             instance.save()
-            messages.success(request, "Your post has been successfully Updated!!!")
+            messages.success(self.request, "Your post has been successfully Updated!!!")
             return redirect("Blog:Content", id=instance.id)
-        return render(request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
+        return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
+
+
+class SignupView(CreateView):
+    model = User
+    form_class = SignUpFrom
+    template_name = 'Blog/signup.html'
+    success_url = reverse_lazy('Blog:login')
+
+
+class LoginView(View):
+    ctx = {'id': 'login_form', 'action': reverse_lazy('Blog:login'), 'button': 'LOGIN'}
+
+    def get(self, request):
+        form = LoginForm()
+        return render(request, "Blog/login.html", {"form": form, 'ctx': self.ctx})
+
+    def post(self, request):
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = request.POST['username']
+            password = request.POST['password']
+            user = User.objects.get(username=username)
+            if user.check_password(password) and user.is_active:
+                login(request, user)
+                return redirect("Blog:homepage")
+        return render(request, "Blog/login.html", {"form": form, 'ctx': self.ctx})
+
+
+class LogoutView(View):
+
+    def post(self, request):
+        logout(request)
+        return redirect("Blog:homepage")
+
+
+class ArticlesView(MyLoginRequiredMixin, TemplateView):
+    template_name = "Blog/articles.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ArticlesView, self).get_context_data(**kwargs)
+        context['articles'] = Blog.objects.filter(author=self.request.user)
+        return context

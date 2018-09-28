@@ -5,7 +5,6 @@ from .forms import BlogForm, LoginForm, SignUpFrom
 from .models import Blog
 from django.urls import reverse, reverse_lazy
 import uuid
-from django.http import Http404
 from django.contrib import messages
 from django.utils.safestring import mark_safe
 from bs4 import BeautifulSoup
@@ -30,15 +29,16 @@ class HomePage(View):
         form = BlogForm(request.POST)
         if form.is_valid():
             instance = form.save()
-            if not request.user.is_authenticated:
+            if request.user.is_authenticated:
+                instance.author = request.user
+                url_path = reverse('Blog:LogUserEdit', kwargs={'id': instance.id})
+                request.session['url_path'] = url_path
+                instance.save()
+            else:
                 instance.secret_key = uuid.uuid4().hex[:6].upper()
                 instance.save()
-                url_path = reverse('Blog:homepage', kwargs={'id': instance.id, 'secret_key': instance.secret_key})
-            else:
-                instance.author = request.user
-                instance.save()
-                url_path = reverse('Blog:homepage', kwargs={'id': instance.id})
-            messages.success(request, mark_safe("<a href='{url_path}'>{url_path}</a>".format(url_path=url_path)))
+                url_path = reverse('Blog:editPage', kwargs={'id': instance.id, 'secret_key': instance.secret_key})
+                messages.success(request, mark_safe("<a href='{url_path}'>{url_path}</a>".format(url_path=url_path)))
             return redirect("Blog:Content", id=instance.id)
         return render(request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
 
@@ -67,11 +67,11 @@ class EditPage(View):
             self.blog = get_object_or_404(Blog, id=self.kwargs.get('id'), author=request.user)
         return super(EditPage, self).dispatch(request, *args, **kwargs)
 
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         form = BlogForm(instance=self.blog)
         return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
 
-    def post(self, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         form = BlogForm(self.request.POST or None, instance=self.blog)
         if form.is_valid():
             instance = form.save()

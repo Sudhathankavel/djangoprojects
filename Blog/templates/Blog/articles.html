@@ -11,6 +11,10 @@
         <p class="card-text">
             {%for post in articles %}
                 {{post|linebreaks}}
+
+                {% if request.user == post.author%}
+                    <a href="{% url 'Blog:LogUserEdit' id=post.id %}">Edit</a>
+                {% endif %}
             {% endfor %}
         </p>
       </div>

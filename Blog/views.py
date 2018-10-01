@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import CreateView,TemplateView
+from django.views.generic import CreateView,TemplateView,UpdateView
 from .forms import BlogForm, LoginForm, SignUpFrom
 from .models import Blog
 from django.urls import reverse, reverse_lazy
@@ -57,7 +57,7 @@ class ContentPage(View):
 
 
 class EditPage(View):
-    ctx = {'id': 'edit_post', 'button': 'Edit and Save', 'claim_button':'Claim'}
+    ctx = {'id': 'edit_post', 'button': 'Edit and Save', 'claim_button': 'Claim'}
 
     def dispatch(self, request, *args, **kwargs):
         if self.kwargs.get('secret_key'):
@@ -68,12 +68,16 @@ class EditPage(View):
 
     def get(self, request, *args, **kwargs):
         form = BlogForm(instance=self.blog)
-        return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
+        return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx,'blog':self.blog})
 
     def post(self, request, *args, **kwargs):
         form = BlogForm(self.request.POST or None, instance=self.blog)
         if form.is_valid():
             instance = form.save()
+            if request.POST.get('claim'):
+                new_user = get_object_or_404(User, id=int(request.POST.get('claim')))
+                instance.author = new_user
+                instance.secret_key = " "
             instance.save()
             messages.success(self.request, "Your post has been successfully Updated!!!")
             return redirect("Blog:Content", id=instance.id)
@@ -120,3 +124,6 @@ class ArticlesView(MyLoginRequiredMixin, TemplateView):
         context = super(ArticlesView, self).get_context_data(**kwargs)
         context['articles'] = Blog.objects.filter(author=self.request.user)
         return context
+
+
+

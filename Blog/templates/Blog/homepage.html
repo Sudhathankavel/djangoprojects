@@ -1,45 +1,53 @@
 {% extends 'Blog/base.html' %}
 {% load widget_tweaks %}
-{% block title %} ANONYMOUS BLOG {% endblock %}
+{% block title %} HOMEPAGE {% endblock %}
 {% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
 {% block pagecontent %}
-<div id="Wrapper" class="container" style="padding-top : 25px;">
-    <form action="{{ctx.action}}" method="post" id="{{ctx.id}}">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">
-                {% for error in form.non_field_errors%}
-                    {{error}}
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="form-group" id="first">
-            <label for="{{form.title.id_for_label}}">Title:</label>
-            {% if form.title.errors %}
-                {% render_field form.title class="form-control is-invalid" %}
-                <div class="invalid-feedback">
-                     {{form.title.errors}}
-                </div>
-            {% else %}
-                {% render_field form.title class="form-control is-valid" %}
-            {% endif %}
+<div class="form-group" id="first">
+    <label for="{{form.title.id_for_label}}">Title:</label>
+    {% if form.title.errors %}
+        {% render_field form.title class="form-control is-invalid" %}
+        <div class="invalid-feedback">
+             {{form.title.errors}}
         </div>
-
-        <div class="form-group " id="second">
-            <label for="{{form.content.id_for_label}}">content:</label>
-            {% if form.content.errors %}
-                {% render_field form.content class="form-control is-invalid" %}
-                <div class="invalid-feedback">
-                    {{form.content.errors}}
-                </div>
-            {% else %}
-                {% render_field form.content class="form-control is-valid" %}
-            {% endif %}
-        </div>
-        <div id="third">
-            <button class="btn btn-primary">{{ctx.button}}</button>
-        </div>
-    </form>
+    {% else %}
+        {% render_field form.title class="form-control is-valid" %}
+    {% endif %}
 </div>
+
+<div class="form-group " id="second">
+    <label for="{{form.content.id_for_label}}">content:</label>
+    {% if form.content.errors %}
+        {% render_field form.content class="form-control is-invalid" %}
+        <div class="invalid-feedback">
+            {{form.content.errors}}
+        </div>
+    {% else %}
+        {% render_field form.content class="form-control is-valid" %}
+    {% endif %}
+</div>
+<div>
+    <button class="btn btn-primary">{{ctx.button}}</button>
+</div>
+{% if request.user.is_authenticated and not blog.author %}
+    <div>
+        <input type='hidden' id="tag" name="claim" value="{{request.user.id}}"/>
+        <button  class="btn btn-primary float-right" onclick="clicked()" id="confrim">{{ctx.claim_button}}</button>
+    </div>
+{% endif %}
+<script>
+    function clicked()
+    {
+       if (confirm('Do you want to claim?'))
+       {
+            return true;
+       } else
+       {
+           return false;
+       }
+    }
+
+</script>
 {%endblock%}
+
+

@@ -29,25 +29,4 @@
 <div>
     <button class="btn btn-primary">{{ctx.button}}</button>
 </div>
-{% if request.user.is_authenticated and not blog.author %}
-    <div>
-        <input type='hidden' id="tag" name="claim" value="{{request.user.id}}"/>
-        <button  class="btn btn-primary float-right" onclick="clicked(event)" id="confrim">{{ctx.claim_button}}</button>
-    </div>
-{% endif %}
-<script>
-    function clicked(event)
-    {
-       if (confirm('Do you want to claim?'))
-       {
-            return true;
-       } else
-       {
-           event.preventDefault();
-       }
-    }
-
-</script>
 {%endblock%}
-
-

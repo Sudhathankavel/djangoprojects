@@ -1,6 +1,7 @@
+from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import CreateView,TemplateView
+from django.views.generic import CreateView,TemplateView,DetailView
 from .forms import BlogForm, LoginForm, SignUpFrom
 from .models import Blog
 from django.urls import reverse, reverse_lazy
@@ -57,7 +58,7 @@ class ContentPage(View):
 
 
 class EditPage(View):
-    ctx = {'id': 'edit_post', 'button': 'Edit and Save', 'claim_button':'Claim'}
+    ctx = {'id': 'edit_post', 'button': 'Edit and Save', 'claim_button': 'Claim'}
 
     def dispatch(self, request, *args, **kwargs):
         if self.kwargs.get('secret_key'):
@@ -68,14 +69,17 @@ class EditPage(View):
 
     def get(self, request, *args, **kwargs):
         form = BlogForm(instance=self.blog)
-        return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
+        if request.user.is_authenticated and self.blog.author is None:
+            url = reverse('Blog:Claim', kwargs={'id': self.blog.id, 'secret_key': self.blog.secret_key})
+            return redirect(url)
+        else:
+            return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx,'blog':self.blog})
 
     def post(self, request, *args, **kwargs):
         form = BlogForm(self.request.POST or None, instance=self.blog)
         if form.is_valid():
             instance = form.save()
             instance.save()
-            messages.success(self.request, "Your post has been successfully Updated!!!")
             return redirect("Blog:Content", id=instance.id)
         return render(self.request, "Blog/homepage.html", {'form': form, 'ctx': self.ctx})
 
@@ -120,3 +124,24 @@ class ArticlesView(MyLoginRequiredMixin, TemplateView):
         context = super(ArticlesView, self).get_context_data(**kwargs)
         context['articles'] = Blog.objects.filter(author=self.request.user)
         return context
+
+
+class ClaimView(MyLoginRequiredMixin, DetailView):
+    model = Blog
+    template_name = 'Blog/claim.html'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Blog, id=self.kwargs.get('id'), secret_key=self.kwargs.get('secret_key'))
+
+    def dispatch(self, request, *args, **kwargs):
+        self.blog = self.get_object()
+        if not (request.user.is_authenticated and self.blog.author is None):
+            raise Http404
+        return super(ClaimView, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        post = self.get_object()
+        post.author = self.request.user
+        post.secret_key = ''
+        post.save()
+        return redirect("Blog:Content", id=post.id)

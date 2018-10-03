@@ -1,5 +1,6 @@
 from django.urls import path
-from Blog.views import HomePage, ContentPage, EditPage,SignupView,LoginView,ArticlesView,LogoutView
+from Blog.views import (ArticlesView, ClaimView, ContentPage, HomePage, EditPage,
+                        LoginView, SignupView, LogoutView)
 
 app_name = 'Blog'
 urlpatterns = [
@@ -10,5 +11,6 @@ urlpatterns = [
     path('signup/', SignupView.as_view(), name="signup"),
     path('login/', LoginView.as_view(), name="login"),
     path('logout/', LogoutView.as_view(), name="logout"),
-    path('mine/', ArticlesView.as_view(), name="mine")
+    path('mine/', ArticlesView.as_view(), name="mine"),
+    path('<int:id>/claim/<secret_key>', ClaimView.as_view(), name="Claim"),
 ]

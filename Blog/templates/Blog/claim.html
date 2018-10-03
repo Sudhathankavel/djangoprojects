@@ -1,0 +1,31 @@
+{% extends 'Blog/base.html' %}
+{% load widget_tweaks %}
+{% block title %} CLAIM PAGE {% endblock %}
+{% block header %}<b> ANONYMOUS BLOG</b> {% endblock %}
+{% block pagecontent %}
+<div class="container">
+    <div class="card">
+      <div class="card-body">
+          {{obj}}
+        <h6 class="font-weight-bold indigo-text py-2">{{object.title}}</h6>
+         <p class="card-text">This is an Anonymous Blog: Claim it as Yours</p>
+          <form method="post">
+            <button type="submit" class="btn btn-primary" onclick="clicked(event)">CLAIM</button>
+          </form>
+      </div>
+    </div>
+</div>
+<script>
+    function clicked(event)
+    {
+       if (confirm('Do you want to confirm this action?'))
+       {
+            return true;
+       } else
+       {
+           event.preventDefault();
+       }
+    }
+
+</script>
+{%endblock%}

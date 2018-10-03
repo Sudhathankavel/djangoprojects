@@ -131,7 +131,7 @@ class ClaimView(MyLoginRequiredMixin, DetailView):
     template_name = 'Blog/claim.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Blog, id=self.kwargs.get('id'))
+        return get_object_or_404(Blog, id=self.kwargs.get('id'), secret_key=self.kwargs.get('secret_key'))
 
     def dispatch(self, request, *args, **kwargs):
         self.blog = self.get_object()

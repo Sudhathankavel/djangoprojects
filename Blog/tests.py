@@ -94,11 +94,13 @@ class RenderingTest(TestCase):
         self.assertContains(response, '<ul><li>This is h1 tag</li></ul><ul><ul><li>This is h2 tag</li></ul></ul></p>', status_code=200)
 
 
-class SignupLoginTest(TestCase):
-
+class UserDataTestClass(TestCase):
     def setUp(self):
         self.user_data = {'username': 'foo', 'email': 'foo@gmail.com', 'password': 'testuser'}
         User.objects.create_user(**self.user_data)
+
+
+class SignupLoginUsersTest(UserDataTestClass):
 
     def test_signup_with_wrong_password(self):
         response = self.client.post(reverse('Blog:signup'), {'username': 'foo', 'email': 'foo@gmail.com', 'password1': 'testuser', 'password2': 'Testuser'}, follow=True)
@@ -125,3 +127,4 @@ class SignupLoginTest(TestCase):
     def test_login_registered_user(self):
         response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
         self.assertTrue(response.context['user'].is_active)
+

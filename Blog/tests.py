@@ -134,13 +134,12 @@ class SignupLoginTest(UserDataTestClass):
 
     def test_login_registered_user(self):
         response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
-        import ipdb;ipdb.set_trace()
         self.assertTrue(response.context['user'].is_active)
 
 
 class LoggedInUsersTests(UserDataTestClass):
 
-    def test_publish_article(self):
+    def test_publish_article_by_logged_in_user(self):
         login_response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
         self.assertTrue(login_response.context['user'].is_active)
         article_response = self.client.post(reverse('Blog:homepage'), self.article_data)

@@ -38,7 +38,8 @@ class FormBlogTest(TestCase):
     def test_verify_redirect(self):
         response = self.client.post(reverse('Blog:homepage'), self.form_data)
         instance = Blog.objects.get(title='test Title With ten Characters')
-        self.assertRedirects(response, reverse('Blog:Content', kwargs={'id': instance.id}), status_code=302, target_status_code=200)
+        self.assertRedirects(response, reverse('Blog:Content', kwargs={'id': instance.id}),
+                             status_code=302, target_status_code=200)
 
     def test_redirected_page_is_in_html(self):
         response = self.client.post(reverse('Blog:homepage'), self.form_data, follow=True)
@@ -63,14 +64,17 @@ class EditLinkTest(TestCase):
         self.instance = Blog.objects.get(title='test blog post with ORM')
 
     def test_verify_redirection_of_edit_link(self):
-        response = self.client.get(reverse('Blog:editPage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}))
+        response = self.client.get(reverse('Blog:editPage', kwargs={'id': self.instance.id,
+                                                                    'secret_key': self.instance.secret_key}))
         self.assertContains(response, 'test blog post with ORM', status_code=200)
         wrong_secret_key = 'DF20192'
-        response = self.client.get(reverse('Blog:editPage', kwargs={'id': self.instance.id, 'secret_key': wrong_secret_key}))
+        response = self.client.get(reverse('Blog:editPage', kwargs={'id': self.instance.id,
+                                                                    'secret_key': wrong_secret_key}))
         self.assertEquals(response.status_code, 404)
 
     def test_changes_edits_the_post_successfully(self):
-        update_data = {'title': 'test title to check the updation', 'content': 'test content to check the updation is working'}
+        update_data = {'title': 'test title to check the updation',
+                       'content': 'test content to check the updation is working'}
         response = self.client.post(reverse('Blog:editPage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}), update_data, follow=True)
         fetch_updated_data = Blog.objects.get(title='test title to check the updation')
         self.assertEquals(fetch_updated_data.content, 'test content to check the updation is working' )
@@ -89,18 +93,22 @@ class RenderingTest(TestCase):
         self.assertContains(response, '&lt;script&gt;this is nonsafe tag&lt;/script&gt;', status_code=200)
 
     def test_to_check_outline(self):
-        content = {'title': 'ANONYMOUS BLOG POST - OULTINE CHECK', 'content': '<h1>This is h1 tag</h1><h2>This is h2 tag</h2>'}
+        content = {'title': 'ANONYMOUS BLOG POST - OULTINE CHECK',
+                   'content': '<h1>This is h1 tag</h1><h2>This is h2 tag</h2>'}
         response = self.client.post(reverse('Blog:homepage'), content, follow=True)
-        self.assertContains(response, '<ul><li>This is h1 tag</li></ul><ul><ul><li>This is h2 tag</li></ul></ul></p>', status_code=200)
+        self.assertContains(response, '<ul><li>This is h1 tag</li></ul><ul><ul><li>This is h2 tag</li></ul></ul></p>',
+                            status_code=200)
 
 
 class UserDataTestClass(TestCase):
     def setUp(self):
         self.user_data = {'username': 'foo', 'email': 'foo@gmail.com', 'password': 'testuser'}
         User.objects.create_user(**self.user_data)
+        self.article_data = {'title': 'TEST BLOG FOR LOGGED IN USERS',
+                             'content': 'Test content for logged in users to check the article publish'}
 
 
-class SignupLoginUsersTest(UserDataTestClass):
+class SignupLoginTest(UserDataTestClass):
 
     def test_signup_with_wrong_password(self):
         response = self.client.post(reverse('Blog:signup'), {'username': 'foo', 'email': 'foo@gmail.com', 'password1': 'testuser', 'password2': 'Testuser'}, follow=True)
@@ -128,3 +136,20 @@ class SignupLoginUsersTest(UserDataTestClass):
         response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
         self.assertTrue(response.context['user'].is_active)
 
+
+class LoggedInUsersTests(UserDataTestClass):
+
+    def test_publish_article_by_logged_in_user(self):
+        login_response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
+        self.assertTrue(login_response.context['user'].is_active)
+        article_response = self.client.post(reverse('Blog:homepage'), self.article_data)
+        article_instance = Blog.objects.get(id=article_response.url.split('/')[1])
+        self.assertRedirects(article_response, reverse('Blog:Content', kwargs={'id': article_instance.id}), status_code=302, target_status_code=200)
+        self.assertEquals(login_response.context['user'], article_instance.author)
+
+    def test_mine_link(self):
+        login_response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
+        self.assertTrue(login_response.context['user'].is_active)
+        self.client.post(reverse('Blog:homepage'), self.article_data)
+        response = self.client.get(reverse('Blog:mine'))
+        self.assertContains(response, self.article_data['title'], status_code=200)

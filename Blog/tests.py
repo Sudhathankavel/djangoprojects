@@ -1,11 +1,12 @@
 from django.test import TestCase, Client
-from .models import Blog
+from .models import Blog ,User
 from .forms import BlogForm
 from django.shortcuts import reverse
 import uuid
 
 
 class FormFieldTest(TestCase):
+
     def setUp(self):
         self.post = Blog.objects.create(title='testBlogPost', content='test content')
 
@@ -19,12 +20,12 @@ class FormFieldTest(TestCase):
     def test_to_check_content_greater_than_title(self):
         data = {'title': 'testTitle With ten Characters', 'content': 'test content with TC'}
         form = BlogForm(data=data)
-        # import pdb;pdb.set_trace()
         self.assertEqual(len(form.errors), 1)
         self.assertEquals(form.errors['__all__'], ['content should be longer than title.'])
 
 
 class FormBlogTest(TestCase):
+
     def setUp(self):
         self.form_data = {'title': 'test Title With ten Characters', 'content': 'test content with Ten Characters long'}
 
@@ -47,13 +48,14 @@ class FormBlogTest(TestCase):
     def test_verify_edit_link_correct_on_first_fetch_incorrect_on_sec_fetch(self):
         response = self.client.post(reverse('Blog:homepage'), self.form_data, follow=True)
         instance = Blog.objects.get(title='test Title With ten Characters')
-        data = '/Blog/{id}/edit/{secret_key}'.format(id=instance.id, secret_key=instance.secret_key)
+        data = '/{id}/edit/{secret_key}'.format(id=instance.id, secret_key=instance.secret_key)
         self.assertContains(response, data, status_code=200)
         content_response = self.client.get(reverse('Blog:Content', kwargs={'id': instance.id}))
         self.assertNotContains(content_response, data, status_code=200)
 
 
 class EditLinkTest(TestCase):
+
     def setUp(self):
         self.blogpost = Blog.objects.create(title='test blog post with ORM', content='test content by a post with ORM')
         self.blogpost.secret_key = uuid.uuid4().hex[:6].upper()
@@ -61,15 +63,15 @@ class EditLinkTest(TestCase):
         self.instance = Blog.objects.get(title='test blog post with ORM')
 
     def test_verify_redirection_of_edit_link(self):
-        response = self.client.get(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}))
+        response = self.client.get(reverse('Blog:editPage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}))
         self.assertContains(response, 'test blog post with ORM', status_code=200)
         wrong_secret_key = 'DF20192'
-        response = self.client.get(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': wrong_secret_key}))
+        response = self.client.get(reverse('Blog:editPage', kwargs={'id': self.instance.id, 'secret_key': wrong_secret_key}))
         self.assertEquals(response.status_code, 404)
 
     def test_changes_edits_the_post_successfully(self):
         update_data = {'title': 'test title to check the updation', 'content': 'test content to check the updation is working'}
-        response = self.client.post(reverse('Blog:homepage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}), update_data, follow=True)
+        response = self.client.post(reverse('Blog:editPage', kwargs={'id': self.instance.id, 'secret_key': self.instance.secret_key}), update_data, follow=True)
         fetch_updated_data = Blog.objects.get(title='test title to check the updation')
         self.assertEquals(fetch_updated_data.content, 'test content to check the updation is working' )
 
@@ -79,6 +81,7 @@ class EditLinkTest(TestCase):
 
 
 class RenderingTest(TestCase):
+
     def test_to_check_rendering_of_unsafe_tags(self):
         content_to_render = {'title': 'ANONYMOUS BLOG POST RENDERING', 'content': '<h1>This is h1 tag</h1><script>this is nonsafe tag</script>\n\n<h3>And this is h3 tag</h3>'}
         response = self.client.post(reverse('Blog:homepage'), content_to_render, follow=True)
@@ -91,13 +94,37 @@ class RenderingTest(TestCase):
         self.assertContains(response, '<ul><li>This is h1 tag</li></ul><ul><ul><li>This is h2 tag</li></ul></ul></p>', status_code=200)
 
 
+class UserDataTestClass(TestCase):
+    def setUp(self):
+        self.user_data = {'username': 'foo', 'email': 'foo@gmail.com', 'password': 'testuser'}
+        User.objects.create_user(**self.user_data)
 
 
+class SignupLoginUsersTest(UserDataTestClass):
 
+    def test_signup_with_wrong_password(self):
+        response = self.client.post(reverse('Blog:signup'), {'username': 'foo', 'email': 'foo@gmail.com', 'password1': 'testuser', 'password2': 'Testuser'}, follow=True)
+        self.assertFalse(response.context['user'].is_active)
+        self.assertContains(response, "PASSWORD DOESNT MATCH", status_code=200)
 
+    def test_signup_with_existing_username(self):
+        response = self.client.post(reverse('Blog:signup'), {'username': 'foo', 'email': 'foo@gmail.com', 'password1': 'testuser', 'password2': 'testuser'}, follow=True)
+        self.assertFalse(response.context['user'].is_active)
+        self.assertContains(response, "A user with that username already exists.", status_code=200)
 
+    def test_signup_with_valid_data(self):
+        response = self.client.post(reverse('Blog:signup'), {'username': 'foo2', 'email': 'foo@gmail.com', 'password1': 'testuser', 'password2': 'testuser'}, follow=True)
+        self.assertRedirects(response, reverse('Blog:login'), status_code=302, target_status_code=200)
 
+    def test_login_with_invalid_password(self):
+        response = self.client.post(reverse('Blog:login'), {'username': 'foo', 'password': 'Testuser'}, follow=True)
+        self.assertContains(response, "Wrong password", status_code=200)
 
+    def test_login_unregistered_user(self):
+        response = self.client.post(reverse('Blog:login'), {'username': 'testuser', 'password': 'secret'}, follow=True)
+        self.assertFalse(response.context['user'].is_active)
 
-
+    def test_login_registered_user(self):
+        response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
+        self.assertTrue(response.context['user'].is_active)
 

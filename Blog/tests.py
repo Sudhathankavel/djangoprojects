@@ -106,6 +106,8 @@ class UserDataTestClass(TestCase):
         User.objects.create_user(**self.user_data)
         self.article_data = {'title': 'TEST BLOG FOR LOGGED IN USERS',
                              'content': 'Test content for logged in users to check the article publish'}
+        self.article_data2 = {'title': 'TEST BLOG2 FOR LOGGED IN USERS2',
+                              'content': 'Test content for logged in users to check the article publish'}
 
 
 class SignupLoginTest(UserDataTestClass):
@@ -141,7 +143,6 @@ class LoggedInUsersTests(UserDataTestClass):
 
     def test_publish_article_by_logged_in_user(self):
         login_response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
-        self.assertTrue(login_response.context['user'].is_active)
         article_response = self.client.post(reverse('Blog:homepage'), self.article_data)
         article_instance = Blog.objects.get(id=article_response.url.split('/')[1])
         self.assertRedirects(article_response, reverse('Blog:Content', kwargs={'id': article_instance.id}), status_code=302, target_status_code=200)
@@ -149,7 +150,40 @@ class LoggedInUsersTests(UserDataTestClass):
 
     def test_mine_link(self):
         login_response = self.client.post(reverse('Blog:login'), self.user_data, follow=True)
-        self.assertTrue(login_response.context['user'].is_active)
         self.client.post(reverse('Blog:homepage'), self.article_data)
         response = self.client.get(reverse('Blog:mine'))
         self.assertContains(response, self.article_data['title'], status_code=200)
+
+    def test_edit_link_and_redirect_with_logged_in_users_blog_id_and_another_users_blog_id(self):
+        self.client.post(reverse('Blog:login'), self.user_data, follow=True)
+        article_response = self.client.post(reverse('Blog:homepage'), self.article_data, follow=True)
+        article_instance = Blog.objects.get(title=self.article_data['title'])
+        edit_link = '{id}/edit/'.format(id=article_instance.id)
+        self.assertContains(article_response, edit_link, status_code=200)
+        response = self.client.get(reverse('Blog:LogUserEdit', kwargs={'id': article_instance.id}))
+        self.assertEqual(response.status_code, 200)
+        self.client.post(reverse('Blog:signup'), {'username': 'foo3', 'email': 'foo@gmail.com', 'password1': 'testuser',
+                                                  'password2': 'testuser'})
+        self.client.post(reverse('Blog:login'), {'username': 'foo3', 'password': 'testuser'})
+        self.client.post(reverse('Blog:homepage'), self.article_data2)
+        article_instance2 = Blog.objects.get(title=self.article_data['title'])
+        response = self.client.get(reverse('Blog:LogUserEdit', kwargs={'id': article_instance2.id}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_claim_post_with_login_without_login_and_access_claimed_post(self):
+        anonymous_article_response = self.client.post(reverse('Blog:homepage'), self.article_data)
+        anonymous_article_instance = Blog.objects.get(id=anonymous_article_response.url.split('/')[1])
+        self.client.post(reverse('Blog:login'), self.user_data, follow=True)
+        logged_in_claim_response = self.client.post(reverse('Blog:Claim', kwargs={'id': anonymous_article_instance.id,
+                                                                                  'secret_key': anonymous_article_instance.secret_key}), follow=True)
+        self.assertRedirects(logged_in_claim_response, reverse('Blog:Content', kwargs={'id': anonymous_article_instance.id}),
+                             status_code=302, target_status_code=200)
+        anonymous_claim_response = self.client.post(reverse('Blog:Claim', kwargs={'id': anonymous_article_instance.id,
+                                                                                  'secret_key': anonymous_article_instance.secret_key}))
+        self.assertEqual(anonymous_claim_response.status_code, 404)
+        self.client.post(reverse('Blog:signup'), {'username': 'foo3', 'email': 'foo@gmail.com', 'password1': 'testuser',
+                                                  'password2': 'testuser'})
+        self.client.post(reverse('Blog:login'), {'username': 'foo3', 'password': 'testuser'})
+        claimed_post_access_response = self.client.post(reverse('Blog:Claim', kwargs={'id': anonymous_article_instance.id,
+                                                                                      'secret_key': anonymous_article_instance.secret_key}))
+        self.assertEqual(claimed_post_access_response.status_code, 404)

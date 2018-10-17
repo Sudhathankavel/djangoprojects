@@ -6,6 +6,7 @@ decorator==4.3.0
 -e git://github.com/hersonls/djamin.git@5b5887c84341065844ab44b6cfc8ccb865ccfdb9#egg=djamin
 Django==2.0.7
 django-bootstrap3==11.0.0
+django-environ==0.4.5
 django-widget-tweaks==1.4.2
 djangorestframework==3.8.2
 html5lib==1.0.1
@@ -18,6 +19,8 @@ parso==0.3.1
 pexpect==4.6.0
 pickleshare==0.7.4
 prompt-toolkit==1.0.15
+psycopg2==2.7.5
+psycopg2-binary==2.7.5
 ptyprocess==0.6.0
 Pygments==2.2.0
 pytz==2018.5

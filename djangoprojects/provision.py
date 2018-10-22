@@ -38,7 +38,7 @@ def list(droplet_name):
             print(response.content.decode('utf-8'))
         else:
             print("FAILED TO GET RESPONSE")
-    except Exception:
+    except IndexError:
         print("DROPLET DOESNT EXIST")
 
 
@@ -83,7 +83,7 @@ def delete(droplet_name):
                 print("DELETED SUCCESSFULLY")
             else:
                 print("FAILED TO GET DELETE")
-    except Exception:
+    except IndexError:
         print("DROPLET DOESNT EXIST")
 
 

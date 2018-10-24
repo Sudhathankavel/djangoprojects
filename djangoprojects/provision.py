@@ -10,7 +10,7 @@
       -h --help     Show this screen.
 
 """
-import json
+import sshpubkeys
 import time
 import requests
 import environ
@@ -21,25 +21,29 @@ env = environ.Env(
     DEBUG=(bool, True)
 )
 
-# reading .env file
 environ.Env.read_env()
 
-api_token = env('API_KEY')
-api_url_base = 'https://api.digitalocean.com/v2/'
-headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer {0}'.format(api_token)}
+API_TOKEN = env('API_KEY')
+API_URL_BASE = 'https://api.digitalocean.com/v2/'
+HEADERS = {'Content-Type': 'application/json', 'Authorization': 'Bearer {0}'.format(API_TOKEN)}
+
+with open(env('SSH_KEY_PATH'), 'r') as f:
+    ssh_key = f.readline()
+fingerprint = sshpubkeys.SSHKey(ssh_key)
 
 
 def list(droplet_name):
-    api_droplet = api_url_base + 'droplets?tag_name=' + droplet_name
-    response = requests.get(api_droplet, headers=headers)
-    jsondata = json.loads(response.text)
-    try:
-        if droplet_name == "Name:" + (jsondata.get("droplets")[0]).get("name") and response.status_code == 200 :
+    api_droplet = API_URL_BASE + 'droplets?tag_name=' + droplet_name
+    response = requests.get(api_droplet, headers=HEADERS)
+    jsondata = response.json()
+    droplets = jsondata['droplets']
+    if not len(droplets) == 0:
+        if droplet_name == droplets[0]['tags'][0] and response.status_code == 200 :
             print(response.content.decode('utf-8'))
         else:
             print("FAILED TO GET RESPONSE")
-    except IndexError:
-        print("DROPLET DOESNT EXIST")
+    else:
+        print("DROPLET DOESN'T EXIST")
 
 
 def create(droplet_name):
@@ -48,43 +52,44 @@ def create(droplet_name):
              "region": "nyc3",
              "size": "s-1vcpu-1gb",
              "image": "ubuntu-16-04-x64",
-             "ssh_keys": [23341984],
+             "ssh_keys": [fingerprint.hash_md5().replace("MD5:", "")],
              "backups": False,
              "ipv6": True,
              "user_data": None,
              "private_networking": None,
              "volumes": None,
              "tags": [
-                   "Name:"+droplet_name
+                   "name:"+droplet_name
                  ]
             }
-    api_url = '{0}droplets'.format(api_url_base)
-    response = requests.post(api_url, headers=headers, json=data)
-    time.sleep(25)  # delays for 25 seconds
-    if response.status_code == 202:
-        print("SUCCESSFULLY CREATED")
-        jsondata = json.loads(response.text)
-        response_id = (jsondata.get("droplet")).get("id")
-        response_status = (jsondata.get("droplet")).get("status")
-        data = {'id': response_id, 'status': response_status}
-    else:
-        print("FAILED TO CREATE")
-    return data
+    api_url = '{0}droplets'.format(API_URL_BASE)
+    response = requests.post(api_url, headers=HEADERS, json=data)
+    jsondata = response.json()
+    droplet = jsondata['droplet']
+    while True:
+        time.sleep(20)
+        response_status = droplet['status']
+        if response_status == 'new':
+            print("SUCCESSFULLY CREATED")
+            break
+        else:
+            print("FAILED TO CREATE")
 
 
 def delete(droplet_name):
-    api_droplet = api_url_base + 'droplets?tag_name=' + droplet_name
-    get_response = requests.get(api_droplet, headers=headers)
-    jsondata = json.loads(get_response.text)
-    try:
-        if droplet_name == "Name:" + (jsondata.get("droplets")[0]).get("name"):
-            response = requests.delete(api_droplet, headers=headers)
+    api_droplet = API_URL_BASE + 'droplets?tag_name=' + droplet_name
+    get_response = requests.get(api_droplet, headers=HEADERS)
+    jsondata = get_response.json()
+    droplets = jsondata['droplets']
+    if not len(droplets) == 0:
+        if droplet_name == droplets[0]['tags'][0]:
+            response = requests.delete(api_droplet, headers=HEADERS)
             if response.status_code == 204:
                 print("DELETED SUCCESSFULLY")
             else:
                 print("FAILED TO GET DELETE")
-    except IndexError:
-        print("DROPLET DOESNT EXIST")
+    else:
+        print("DROPLET DOESN'T EXIST")
 
 
 if __name__ == "__main__":
